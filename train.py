@@ -108,6 +108,8 @@ def train(
     lr *= bs_rat
 
     m = globals()[arch]
+
+    print("Activation Function ------------" , act_fn )
     
     log_cb = partial(CSVLogger,filename=log)
     
