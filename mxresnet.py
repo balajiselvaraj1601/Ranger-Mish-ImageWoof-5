@@ -2,7 +2,6 @@
 #https://github.com/fastai/fastai/blob/master/fastai/vision/models/xresnet.py
 #modified by lessw2020 - github:  https://github.com/lessw2020/mish
 
-
 from fastai.torch_core import *
 import torch.nn as nn
 import torch,math,sys
@@ -12,7 +11,7 @@ from functools import partial
 from fastai.torch_core import Module
 
 import torch.nn.functional as F  #(uncomment if needed,but you likely already have it)
-
+from activations import *
 
 class Mish(nn.Module):
     def __init__(self):
@@ -22,10 +21,6 @@ class Mish(nn.Module):
     def forward(self, x):  
         #save 1 second per epoch with no x= x*() and then return x...just inline it.
         return x *( torch.tanh(F.softplus(x))) 
-        
-
-
-    
 
 #Unmodified from https://github.com/fastai/fastai/blob/5c51f9eabf76853a89a9bc5741804d2ed4407e49/fastai/layers.py
 def conv1d(ni:int, no:int, ks:int=1, stride:int=1, padding:int=0, bias:bool=False):
@@ -34,8 +29,6 @@ def conv1d(ni:int, no:int, ks:int=1, stride:int=1, padding:int=0, bias:bool=Fals
     nn.init.kaiming_normal_(conv.weight)
     if bias: conv.bias.data.zero_()
     return spectral_norm(conv)
-
-
 
 # Adapted from SelfAttention layer at https://github.com/fastai/fastai/blob/5c51f9eabf76853a89a9bc5741804d2ed4407e49/fastai/layers.py
 # Inspired by https://arxiv.org/pdf/1805.08318.pdf
@@ -53,7 +46,6 @@ class SimpleSelfAttention(nn.Module):
         
     def forward(self,x):
         
-        
         if self.sym:
             # symmetry hack by https://github.com/mgrankin
             c = self.conv.weight.view(self.n_in,self.n_in)
@@ -70,20 +62,15 @@ class SimpleSelfAttention(nn.Module):
         xxT = torch.bmm(x,x.permute(0,2,1).contiguous())   # (C,N) * (N,C) = (C,C)   => O(NC^2)
         
         o = torch.bmm(xxT, convx)   # (C,C) * (C,N) = (C,N)   => O(NC^2)
-          
         o = self.gamma * o + x
         
           
         return o.view(*size).contiguous()        
-        
-
-
-    
     
 __all__ = ['MXResNet', 'mxresnet18', 'mxresnet34', 'mxresnet50', 'mxresnet101', 'mxresnet152']
 
 # or: ELU+init (a=0.54; gain=1.55)
-act_fn = Mish() #nn.ReLU(inplace=True)
+act_fn = globals()[activ] #nn.ReLU(inplace=True)
 
 class Flatten(Module):
     def forward(self, x): return x.view(x.size(0), -1)
