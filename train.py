@@ -19,6 +19,7 @@ from torchvision.models import *
 #from x2resnet import *
 from mxresnet import *
 from functools import partial
+from activations import *
 
 torch.backends.cudnn.benchmark = True
 fastprogress.MAX_COLS = 80
@@ -109,7 +110,9 @@ def train(
 
     m = globals()[arch]
 
-    print("Activation Function ----------------" , globals()["act_fn"] )
+    print(" ---------------- Activation Function  ---------------- ")
+    print(globals()["activ"] )
+    print(" ---------------- Activation Function  ---------------- ")
     
     log_cb = partial(CSVLogger,filename=log)
     
