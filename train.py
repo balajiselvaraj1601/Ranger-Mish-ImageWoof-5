@@ -1,12 +1,3 @@
-# the code mostly from https://github.com/sdoria/SimpleSelfAttention
-#based on @grankin FastAI forum script
-#updated by lessw2020 to use Mish XResNet
-
-# adapted from https://github.com/fastai/fastai/blob/master/examples/train_imagenette.py
-# changed per gpu bs for bs_rat
-
-
-
 from fastai.script import *
 from fastai.vision import *
 from fastai.callbacks import *
@@ -20,6 +11,7 @@ from torchvision.models import *
 from mxresnet import *
 from functools import partial
 from activations import *
+import settings
 
 torch.backends.cudnn.benchmark = True
 fastprogress.MAX_COLS = 80
@@ -81,6 +73,7 @@ def train(
         log: Param("Log file name", str)='log',
         sched_type: Param("LR schedule type", str)='one_cycle',
         ann_start: Param("Mixup", float)=-1.0,
+        name_num: Param("Name_Number", int)=1,
         ):
     "Distributed training of Imagenette."
     
@@ -110,8 +103,13 @@ def train(
 
     m = globals()[arch]
 
+    settings.initialize()
+    func_list = [*functions]
+    name = func_list[name_num]
+    settings.activ = functions[name]
+
     print(" ---------------- Activation Function  ---------------- ")
-    print(globals()["activ"] )
+    print(settings.activ )
     print(" ---------------- Activation Function  ---------------- ")
     
     log_cb = partial(CSVLogger,filename=log)
@@ -168,10 +166,11 @@ def main(
         log: Param("Log file name", str)='log',
         sched_type: Param("LR schedule type", str)='one_cycle',
         ann_start: Param("Mixup", float)=-1.0,
+        name_num: Param("Name_Number", int)=1,
         ):
 
     acc = np.array(
-        [train(gpu,woof,lr,size,alpha,mom,eps,epochs,bs,mixup,opt,arch,sa,sym,dump,lrfinder,log,sched_type,ann_start)
+        [train(gpu,woof,lr,size,alpha,mom,eps,epochs,bs,mixup,opt,arch,sa,sym,dump,lrfinder,log,sched_type,ann_start,name_num)
                 for i in range(run)])
     
     print(acc)
