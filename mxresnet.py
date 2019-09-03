@@ -1,6 +1,3 @@
-#FastAI's XResnet modified to use Mish activation function, MXResNet 
-#https://github.com/fastai/fastai/blob/master/fastai/vision/models/xresnet.py
-#modified by lessw2020 - github:  https://github.com/lessw2020/mish
 
 from fastai.torch_core import *
 import torch.nn as nn
@@ -9,6 +6,7 @@ import torch.utils.model_zoo as model_zoo
 from functools import partial
 #from ...torch_core import Module
 from fastai.torch_core import Module
+import settings
 
 import torch.nn.functional as F  #(uncomment if needed,but you likely already have it)
 from activations import *
@@ -69,9 +67,13 @@ class SimpleSelfAttention(nn.Module):
     
 __all__ = ['MXResNet', 'mxresnet18', 'mxresnet34', 'mxresnet50', 'mxresnet101', 'mxresnet152']
 
+def activ_func():
+        #print(settings.activ)
+        return settings.activ
+  
 # or: ELU+init (a=0.54; gain=1.55)
-act_fn = globals()["activ"] #nn.ReLU(inplace=True)
-print("Activation Function" , act_fn )
+# act_fn = settings.activ #nn.ReLU(inplace=True)
+# print("Activation Function" , act_fn )
 
 class Flatten(Module):
     def forward(self, x): return x.view(x.size(0), -1)
@@ -90,7 +92,7 @@ def conv_layer(ni, nf, ks=3, stride=1, zero_bn=False, act=True):
     bn = nn.BatchNorm2d(nf)
     nn.init.constant_(bn.weight, 0. if zero_bn else 1.)
     layers = [conv(ni, nf, ks, stride=stride), bn]
-    if act: layers.append(act_fn)
+    if act: layers.append(eval(activ_func()))
     return nn.Sequential(*layers)
 
 class ResBlock(Module):
@@ -108,8 +110,9 @@ class ResBlock(Module):
         # TODO: check whether act=True works better
         self.idconv = noop if ni==nf else conv_layer(ni, nf, 1, act=False)
         self.pool = noop if stride==1 else nn.AvgPool2d(2, ceil_mode=True)
+        self.act_fn= eval(activ_func())
 
-    def forward(self, x): return act_fn(self.sa(self.convs(x)) + self.idconv(self.pool(x)))
+    def forward(self, x): return self.act_fn(self.sa(self.convs(x)) + self.idconv(self.pool(x)))
 
 def filt_sz(recep): return min(64, 2**math.floor(math.log2(recep*0.75)))
 
