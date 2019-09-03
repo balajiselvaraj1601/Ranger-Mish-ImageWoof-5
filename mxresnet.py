@@ -71,6 +71,7 @@ __all__ = ['MXResNet', 'mxresnet18', 'mxresnet34', 'mxresnet50', 'mxresnet101', 
 
 # or: ELU+init (a=0.54; gain=1.55)
 act_fn = globals()["activ"] #nn.ReLU(inplace=True)
+print("Activation Function" , act_fn )
 
 class Flatten(Module):
     def forward(self, x): return x.view(x.size(0), -1)
